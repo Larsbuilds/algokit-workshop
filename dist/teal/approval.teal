@@ -1,0 +1,116 @@
+#pragma version 8
+
+// Check if this is the creation transaction
+txn ApplicationID
+int 0
+==
+bnz handle_create
+
+// Handle other operations
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+// Handle application creation
+txn OnCompletion
+int OptIn
+==
+bnz handle_optin
+
+// Handle application deletion
+txn OnCompletion
+int DeleteApplication
+==
+bnz handle_delete
+
+// Default case - reject
+err
+
+handle_create:
+    // Accept creation
+    int 1
+    return
+
+handle_noop:
+    // Check if this is a deposit call
+    txna ApplicationArgs 0
+    byte "deposit"
+    ==
+    bnz handle_deposit
+
+    // Check if this is a store github call
+    txna ApplicationArgs 0
+    byte "store_github"
+    ==
+    bnz handle_store_github
+
+    // Unknown operation - reject
+    err
+
+handle_deposit:
+    // Verify the transaction is a payment
+    txn TypeEnum
+    int pay
+    ==
+    assert
+
+    // Verify the payment is to the application account
+    txn Receiver
+    global CurrentApplicationAddress
+    ==
+    assert
+
+    // Verify the payment amount is greater than 0
+    txn Amount
+    int 0
+    >
+    assert
+
+    // Accept the transaction
+    int 1
+    return
+
+handle_store_github:
+    // Verify the transaction has the correct number of arguments
+    txn NumAppArgs
+    int 2
+    ==
+    assert
+
+    // Get the GitHub handle from the second argument
+    txna ApplicationArgs 1
+    store 0
+
+    // Create a box named "github" with the GitHub handle
+    byte "github"
+    load 0
+    len
+    box_create
+    assert
+
+    // Store the GitHub handle in the box
+    byte "github"
+    load 0
+    box_put
+    assert
+
+    // Accept the transaction
+    int 1
+    return
+
+handle_optin:
+    // Accept opt-in
+    int 1
+    return
+
+handle_delete:
+    // Only the creator can delete the application
+    txn Sender
+    global CreatorAddress
+    ==
+    assert
+
+    // Accept deletion
+    int 1
+    return 

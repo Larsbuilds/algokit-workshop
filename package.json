@@ -1,6 +1,7 @@
 {
   "name": "algokit-workshop",
   "version": "1.0.0",
+  "type": "module",
   "description": "Algorand development workshop project",
   "main": "dist/index.js",
   "scripts": {
@@ -13,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "algosdk": "^2.5.0"
+    "algosdk": "^2.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
